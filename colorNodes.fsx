@@ -15,4 +15,3 @@ coloredNodes |> List.iter (sprintf "%A" >> Console.WriteLine)
 Console.WriteLine "\nPress Enter to quit\n"
 Console.ReadLine() |> ignore
 
-let test = true
