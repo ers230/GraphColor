@@ -7,7 +7,7 @@ open EdwinRotgans.ColorGraph
 
 let vertices = [("a","b");("a","e");("b","c");("b","f");("c","a");("c","f");("d","e");("e","a")]  
 
-let coloredNodes = colorGraph dummyPalet vertices 
+let coloredNodes = colorGraphDummyPalet vertices 
 
 // Output
 Console.WriteLine "\n(Node, color)"

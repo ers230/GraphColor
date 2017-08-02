@@ -1,8 +1,7 @@
 namespace EdwinRotgans
 
-/// Function to assign a color from the to eacht of the graph nodes
+/// Function to assign a color from the to each of the graph nodes
 module ColorGraph = 
-
     /// This function takes a list of vertices in a tuplepair (node1,node2) and assigns a color to each node in such a way that each node color is different from its neighbours
     let colorGraph paletSeq vertices =   
 
@@ -16,16 +15,16 @@ module ColorGraph =
 
         // Converts the vertices into sets of neighbours used for the graph color selection
         let neighbours = 
-            let sets = Array.replicate nodes.Length (Set<'T>[])
-            // for all vertices, update the sets of neighbours
+            let hood = Array.replicate nodes.Length (Set<'T>[])
+            // for all vertices, update the hood of neighbours
             vertices |> List.iter (fun (label1,label2) -> 
                 let idx1 = labelToIndex nodes label1
                 let idx2 = labelToIndex nodes label2 
                 // Add node1 to node2 and visa versa  
-                sets.[idx1] <- Set.add label2 sets.[idx1]
-                sets.[idx2] <- Set.add label1 sets.[idx2])
+                hood.[idx1] <- Set.add label2 hood.[idx1]
+                hood.[idx2] <- Set.add label1 hood.[idx2])
             // return list of sets of neighbours
-            sets |> Array.toList
+            hood |> Array.toList
 
         let getIndicesNeighbours node = 
             neighbours
@@ -57,7 +56,7 @@ module ColorGraph =
         let rec generateColors n = seq{
             yield sprintf "Color#%d" n
             yield! generateColors (n+1) }
-        generateColors 1
+        generateColors 1 // First color = "Color#1"
 
     /// Assigns dummy color labels to each node
     let colorGraphDummyPalet vertices = colorGraph dummyPalet vertices 
