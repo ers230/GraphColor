@@ -1,5 +1,5 @@
 
-namespace EdwinRotgans.Graph
+namespace EdwinRotgans
 
 open System
 open System.Collections.Generic
@@ -8,7 +8,7 @@ open System.Collections.Generic
 module ColoredGraph = 
 
     /// Generic Node with color option
-    type Node<'T,'C> when 'T : comparison and 'C : comparison = {
+    type Node<'T,'C> when 'T : comparison and 'C :> IComparable = {
         Label: 'T
         Color:  'C option
         Neighbours: Set<'T>     
@@ -40,7 +40,7 @@ module ColorGraph =
         vertices
         |> List.collect (fun (label1,label2) -> [label1;label2])
         |> Set |> Seq.toArray
-        |> Array.map Node<'T,'C>.Create    
+        |> Array.map Node<'T,IComparable>.Create    
 
 
     /// Creates a list of nodes with neighbours as provided by the list of vertices

@@ -4,7 +4,7 @@
 
 
 open System
-open EdwinRotgans.Graph.ColorGraph
+open EdwinRotgans.ColorGraph
 open EdwinRotgans.EndlessPalet
 // open EdwinRotgans.Graph.Palet
 
