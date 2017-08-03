@@ -1,55 +1,74 @@
-namespace EdwinRotgans
+namespace EdwinRotgans.Graph
 
-/// Function to assign a color from the to each of the graph nodes
-module ColorGraph = 
-    /// This function takes a list of vertices in a tuplepair (node1,node2) and assigns a color to each node in such a way that each node color is different from its neighbours
-    let colorGraph paletSeq vertices =   
+open System.Collections.Generic
 
-        let nodes = 
+module ColoredGraph = 
+
+    /// Generic Node with color option
+    type Node<'T,'C> when 'T : comparison = {
+        Label: 'T
+        Color:  'C option
+        Neighbours: Set<'T>     
+    } with 
+        static member Create label = 
+            {Label=label; Color=None; Neighbours = set<'T>[] }
+
+        member node.UpdateColor color = {node with Color = Some color}
+
+        member node.LinkNode label = 
+            {node with Neighbours = node.Neighbours.Add label}    
+
+    
+    
+    /// Function to generate a dictionary of linked nodes form a list of vertices
+    /// Any loops between a node and itself are ignored
+    let nodesFromVertices vertices = 
+
+        let nodeLabels = 
             vertices
             |> List.collect (fun (node1,node2) -> [node1;node2])
-            |> Set |> Set.toList
+            |> Set |> Set.toList        
 
-        let labelToIndex labels label =
-            labels |> List.findIndex (fun label' -> label' = label) 
-
-        // Converts the vertices into sets of neighbours used for the graph color selection
-        let neighbours = 
-            let hood = Array.replicate nodes.Length (Set<'T>[])
-            // for all vertices, update the hood of neighbours
-            vertices |> List.iter (fun (label1,label2) -> 
-                let idx1 = labelToIndex nodes label1
-                let idx2 = labelToIndex nodes label2 
-                // Add node1 to node2 and visa versa  
-                hood.[idx1] <- Set.add label2 hood.[idx1]
-                hood.[idx2] <- Set.add label1 hood.[idx2])
-            // return list of sets of neighbours
-            hood |> Array.toList
-
-        let getIndicesNeighbours node = 
-            neighbours
-            |> List.indexed
-            |> List.fold (fun acc (idx,s) -> 
-                if s.Contains node 
-                then idx::acc else acc) []
-
-        // Colors
-        let maxNumberOfNeighbours = neighbours |> List.map (fun s -> s.Count) |> List.max
-        let palet = paletSeq |> Seq.take (maxNumberOfNeighbours+1) |> Set
-        let remainingColorOptions = Array.replicate nodes.Length palet
+        // Store all connections as a dict of nodes and neighbours   
+        let graph = Dictionary<'T,Node<'T,'C>>()                         
+        for label in nodeLabels do 
+            graph.Add (label, Node<'T,'C>.Create label)   
+           
+        // Store all connections 
+        for label1,label2 in vertices do
+            // prevent loop   
+            if label1 = label2 then 
+                printf "\nIGNORED LOOP %A <=> %A\n" label1 label2; ()                         
+            graph.[label1] <- graph.[label1].LinkNode label2
+            graph.[label2] <- graph.[label2].LinkNode label1
         
-        // Select Graph colors
-        nodes |> List.map (fun node -> 
-            let idx1 = labelToIndex nodes node
+        // return graphDict
+        graph
+
+
+    /// Function to assign a color from the to each of the graph nodes 
+    let colorGraph paletSeq (graph: Dictionary<'T,Node<'T,'C>>) = 
+
+        let nodes = graph.Values |> Seq.toList
+        // Colors       
+        let maxNumberOfNeighbours = nodes |> List.map (fun n -> n.Neighbours.Count)  |> List.max
+        let palet = paletSeq |> Seq.take (maxNumberOfNeighbours+1) |> Seq.toList
+                
+        // Set Graph colors        
+        for node in nodes do
+            // Filter colors
+            let forbiddenColors =                 
+                node.Neighbours 
+                |> Set.filter (fun label -> graph.[label].Color.IsSome )                  
+                |> Set.map (fun label -> graph.[label].Color.Value)
             // Pick color
-            let color = remainingColorOptions.[idx1].MinimumElement
-            // remove color form neighbours colorOptions
-            getIndicesNeighbours node 
-            |> List.iter (fun idx2 -> 
-                remainingColorOptions.[idx2] <- remainingColorOptions.[idx2].Remove color)
-            // Return labels and the color
-            (node, color)
-        )
+            let color = palet |> List.find (forbiddenColors.Contains >> not) 
+            // Assign color
+            graph.[node.Label] <- node.UpdateColor color                 
+        
+        // return node list
+        graph.Values |> Seq.toList  
+
 
     /// This dummy palet creates a sequence of strings indicating the color ID
     let dummyPalet = 
@@ -59,4 +78,4 @@ module ColorGraph =
         generateColors 1 // First color = "Color#1"
 
     /// Assigns dummy color labels to each node
-    let colorGraphDummyPalet vertices = colorGraph dummyPalet vertices 
+    let colorGraphDummyPalet graph = colorGraph dummyPalet graph 
